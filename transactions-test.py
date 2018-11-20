@@ -10,6 +10,8 @@ alice, bob, carol= generate_keypair(), generate_keypair(), generate_keypair()
 bdb_root_url = 'https://test.bigchaindb.com' 
 bdb = BigchainDB(bdb_root_url)
 
+#recebendo um usuario para ser inserido no banco
+
 bicycle_asset = {
     'data': {
         'aluno': {
@@ -36,6 +38,17 @@ fulfilled_creation_tx = bdb.transactions.fulfill(
 )
 
 sent_creation_tx = bdb.transactions.send_commit(fulfilled_creation_tx)
+
+############################################################################
+
+#emissão de um certificado
+#recebe o nome completo de usuario e a PK
+#??? fazer pesquisa por asset ou transaction???
+
+user_data = bdb.assets.get(search='NOME-DO-USUARIO')
+
+user_data[0]['data']['aluno']['nome']
+private_key = #recebida do post
 
 txid = fulfilled_creation_tx['id']
 
@@ -76,6 +89,9 @@ print("Is Bob the owner?",
 
 print("Was Alice the previous owner?",
     fulfilled_transfer_tx['inputs'][0]['owners_before'][0] == alice.public_key)
+
+
+##########################################################################
 
 
 
