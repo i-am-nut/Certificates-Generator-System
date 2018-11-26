@@ -5,39 +5,47 @@ from sys import exit
 import datetime
 
 
-alice, bob, carol= generate_keypair(), generate_keypair(), generate_keypair() 
+user_name_keypair, bob, carol= generate_keypair(), generate_keypair(), generate_keypair() 
 
 bdb_root_url = 'https://test.bigchaindb.com' 
 bdb = BigchainDB(bdb_root_url)
 
 #recebendo um usuario para ser inserido no banco
 
-bicycle_asset = {
-    'data': {
-        'aluno': {
-            'nome': 'emerson',
-            'cpf': '123123123'
+def create_user(user_fullname, cpf):
+    user_fullname = #recebe da form
+    cpf = #recebe da form
+    user_name_keypair = generate_keypair()
+    
+    #retornar para o usuario sua chave privada
+    
+    subscriber_asset = {
+        'data': {
+            'aluno': {
+                'nome': user_fullname,
+                'cpf': cpf,
+                'public_key': user_name_keypair.public_key()
+            },
         },
-    },
-}
-
-bicycle_asset_metadata = {
-    'planet': 'earth'
-}
-
-prepared_creation_tx = bdb.transactions.prepare(
-    operation='CREATE',
-    signers=alice.public_key,
-    asset=bicycle_asset,
-    metadata=bicycle_asset_metadata
-)
-
-fulfilled_creation_tx = bdb.transactions.fulfill(
-    prepared_creation_tx,
-    private_keys=alice.private_key
-)
-
-sent_creation_tx = bdb.transactions.send_commit(fulfilled_creation_tx)
+    }
+    
+    subscriber_asset_metadata = {
+        'timestamp': str(datetime.datetime.now()).split('.')[0] 
+    }
+    
+    prepared_creation_tx = bdb.transactions.prepare(
+        operation='CREATE',
+        signers=user_name_keypair.public_key,
+        asset=subscriber_asset,
+        metadata=subscriber_asset_metadata
+    )
+    
+    fulfilled_creation_tx = bdb.transactions.fulfill(
+        prepared_creation_tx,
+        private_keys=user_name_keypair.private_key
+    )
+    
+    sent_creation_tx = bdb.transactions.send_commit(fulfilled_creation_tx)
 
 ############################################################################
 
@@ -45,51 +53,71 @@ sent_creation_tx = bdb.transactions.send_commit(fulfilled_creation_tx)
 #recebe o nome completo de usuario e a PK
 #??? fazer pesquisa por asset ou transaction???
 
-user_data = bdb.assets.get(search='NOME-DO-USUARIO')
+def generate_cert(user_fullname,user_name_private_key):
+    user_data = bdb.assets.get(search=user_fullname)
+    
+    user_name = user_data[0]['data']['aluno']['nome']
+    id_creation_to_generate_certificate = user_data[0]['id']
+    
+    user_blockchain = bdb.transactions.get(asset_id=id_creation_to_generate_certificate)
+    
+    len(user_blockchain)
+    
+    private_key = #recebida do post
+    
+    #txid = fulfilled_creation_tx['id'] 
+    #bdb.assets.get(search='meu nome')
+    
+    asset_id = txid
+    
+    transfer_asset = {
+        'id': asset_id #sempre o id da operação de criação
+    }
+    
+    
+    subscriber_asset_metadata = {
+        'timestamp': str(datetime.datetime.now()).split('.')[0] 
+    }
+    
+    
+    output_index = 0
+    output = user_blockchain[len(user_blockchain)-1]['outputs'][output_index]
+    #output = fulfilled_creation_tx['outputs'][output_index]
+    
+    transfer_input = {
+        'fulfillment': output['condition']['details'],
+        'fulfills': {
+            'output_index': output_index,
+            'transaction_id': user_blockchain[len(user_blockchain)-1]['id'] 
+            #'transaction_id': fulfilled_creation_tx['id']
+        },
+        'owners_before': output['public_keys']
+    }
+    
+    prepared_transfer_tx = bdb.transactions.prepare(
+        operation='TRANSFER',
+        asset=transfer_asset,
+        inputs=transfer_input,
+        metadata=subscriber_asset_metadata
+        recipients=user_name_keypair.public_key,
+    )
+    
+    fulfilled_transfer_tx = bdb.transactions.fulfill(
+        prepared_transfer_tx,
+        private_keys=user_name_keypair.private_key,
+    )
+    
+    sent_transfer_tx = bdb.transactions.send_commit(fulfilled_transfer_tx)
+    
+    #encaixar aqui função de gerar o certificado
 
-user_data[0]['data']['aluno']['nome']
-private_key = #recebida do post
-
-txid = fulfilled_creation_tx['id']
-
-asset_id = txid
-
-transfer_asset = {
-    'id': asset_id
-}
-
-output_index = 0
-output = fulfilled_creation_tx['outputs'][output_index]
-
-transfer_input = {
-    'fulfillment': output['condition']['details'],
-    'fulfills': {
-        'output_index': output_index,
-        'transaction_id': fulfilled_creation_tx['id']
-    },
-    'owners_before': output['public_keys']
-}
-
-prepared_transfer_tx = bdb.transactions.prepare(
-    operation='TRANSFER',
-    asset=transfer_asset,
-    inputs=transfer_input,
-    recipients=bob.public_key,
-)
-
-fulfilled_transfer_tx = bdb.transactions.fulfill(
-    prepared_transfer_tx,
-    private_keys=alice.private_key,
-)
-
-sent_transfer_tx = bdb.transactions.send_commit(fulfilled_transfer_tx)
-
+'''
 print("Is Bob the owner?",
     sent_transfer_tx['outputs'][0]['public_keys'][0] == bob.public_key)
 
 print("Was Alice the previous owner?",
-    fulfilled_transfer_tx['inputs'][0]['owners_before'][0] == alice.public_key)
-
+    fulfilled_transfer_tx['inputs'][0]['owners_before'][0] == user_name_keypair.public_key)
+'''
 
 ##########################################################################
 
