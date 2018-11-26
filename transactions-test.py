@@ -5,8 +5,6 @@ from sys import exit
 import datetime
 
 
-user_name_keypair, bob, carol= generate_keypair(), generate_keypair(), generate_keypair() 
-
 bdb_root_url = 'https://test.bigchaindb.com' 
 bdb = BigchainDB(bdb_root_url)
 
