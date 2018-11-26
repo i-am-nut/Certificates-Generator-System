@@ -122,49 +122,6 @@ print("Was Alice the previous owner?",
 ##########################################################################
 
 
-
-update_asset_metadata = {
-    'planet': 'pluto',
-    'timestamp': str(datetime.datetime.now()).split('.')[0] 
-}
-
-
-
-output2 = fulfilled_transfer_tx['outputs'][output_index]
-
-transfer_input2 = {
-    'fulfillment': output2['condition']['details'],
-    'fulfills': {
-        'output_index': output_index,
-        'transaction_id': fulfilled_transfer_tx['id']
-    },
-    'owners_before': output2['public_keys']
-}
-
-prepared_transfer_tx2 = bdb.transactions.prepare(
-    operation='TRANSFER',
-    asset=transfer_asset,
-    inputs=transfer_input2,
-    recipients=carol.public_key,
-    metadata=update_asset_metadata
-)
-
-fulfilled_transfer_tx2 = bdb.transactions.fulfill(
-    prepared_transfer_tx2,
-    private_keys=bob.private_key,
-)
-
-sent_transfer_tx2 = bdb.transactions.send_commit(fulfilled_transfer_tx2)
-
-
-print("Is Carol the owner?",
-    sent_transfer_tx2['outputs'][0]['public_keys'][0] == carol.public_key)
-
-print("Was Bob the previous owner?",
-    fulfilled_transfer_tx2['inputs'][0]['owners_before'][0] == bob.public_key)
-
-
-
 '''
 trials = 0
 
