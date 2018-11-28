@@ -3,34 +3,39 @@ from bigchaindb_driver.crypto import generate_keypair
 from time import sleep
 from sys import exit
 import datetime
+import certificator
 
 
 bdb_root_url = 'https://test.bigchaindb.com' 
 bdb = BigchainDB(bdb_root_url)
 
-#recebendo um usuario para ser inserido no banco
 
-def create_user(user_fullname, cpf):
-    #user_fullname = #recebe da form
-    #cpf = #recebe da form
+#criando um usuario no banco
+#eh preciso do seu nome completo, cpf e nome do curso a ser assistido
+#ao final retorna para o usuario sua chave privada
+def create_user(user_fullname, cpf, course_name):
+    
+    print('generating keypair')
     user_name_keypair = generate_keypair()
     
-    #retornar para o usuario sua chave privada
-    
+    print('assembling subscriber_asset')
     subscriber_asset = {
         'data': {
             'aluno': {
                 'nome': user_fullname,
                 'cpf': cpf,
+                'course_name': course_name,
                 'public_key': user_name_keypair.public_key
             },
         },
     }
     
+    print('assembling subscriber_asset')
     subscriber_asset_metadata = {
-        'timestamp': str(datetime.datetime.now()).split('.')[0] 
+        'timestamp': 'usuario criado em '+str(datetime.datetime.now()).split('.')[0] 
     }
     
+    print('preparing create transaction')
     prepared_creation_tx = bdb.transactions.prepare(
         operation='CREATE',
         signers=user_name_keypair.public_key,
@@ -38,88 +43,101 @@ def create_user(user_fullname, cpf):
         metadata=subscriber_asset_metadata
     )
     
+    print('fulfilling create transaction')
     fulfilled_creation_tx = bdb.transactions.fulfill(
         prepared_creation_tx,
         private_keys=user_name_keypair.private_key
     )
     
+    print('commiting create transaction')
     sent_creation_tx = bdb.transactions.send_commit(fulfilled_creation_tx)
 
     print('succesfully user created')
+    print('write your private key below somewhere and hide it behind seven keys!')
 
+    #retornar para o usuario sua chave privada
     return user_name_keypair.private_key
 
-############################################################################
-
 #emissão de um certificado
-#recebe o nome completo de usuario e a PK
-#??? fazer pesquisa por asset ou transaction???
+#recebe o nome completo de usuario, cpf a private key
+#para gerar um certificado eh preciso do nome do usuario, cpf, curso e chave privada
+#pois o mesmo usuario pode ter se inscrito em diferentes cursos
+#neste caso, a diferença será o nome do curso
 
-def generate_cert(user_fullname,user_name_private_key):
-    user_data = bdb.assets.get(search=user_fullname, limit=1)
+def generate_cert(user_fullname, cpf, course_name, user_name_private_key):
+
+    #melhorar esse limite, o banco pode ficar gigante!!!
+    print('searching for asset with the User credentials')
+    user_data = bdb.assets.get(search=user_fullname, limit=10)
     
-    user_name = user_data[0]['data']['aluno']['nome']
-    id_creation_to_generate_certificate = user_data[0]['id']
-    
+    print('looping through the data gathered and saving the exactly wanted one')
+    for index_list in range(0,len(user_data)):
+        user_name = user_data[index_list]['data']['aluno']['nome']
+        user_cpf = user_data[index_list]['data']['aluno']['cpf']
+        user_course_name = user_data[index_list]['data']['aluno']['course_name']
+        user_public_key = user_data[index_list]['data']['aluno']['public_key']
+        id_creation_to_generate_certificate = user_data[index_list]['id']
+
+        if cpf == user_cpf and course_name == user_course_name:
+            break
+
+    if cpf != user_cpf and course_name != user_course_name:
+        print('the credentials were not found')
+        return -1
+            
+    print('getting the user blockchain')
     user_blockchain = bdb.transactions.get(asset_id=id_creation_to_generate_certificate)
     
-    private_key = user_name_private_key
+    asset_id = id_creation_to_generate_certificate
     
-    #txid = fulfilled_creation_tx['id'] 
-    #bdb.assets.get(search='meu nome')
-    
-    asset_id = txid
-    
+    print('setting transfer asset')
     transfer_asset = {
         'id': asset_id #sempre o id da operação de criação
     }
     
     
+    print('setting metadata for this transaction')
     subscriber_asset_metadata = {
-        'timestamp': str(datetime.datetime.now()).split('.')[0] 
+        'timestamp': 'certificado gerado em '+str(datetime.datetime.now()).split('.')[0] 
     }
     
     
     output_index = 0
     output = user_blockchain[len(user_blockchain)-1]['outputs'][output_index]
-    #output = fulfilled_creation_tx['outputs'][output_index]
     
+    print('setting transfer input')
     transfer_input = {
         'fulfillment': output['condition']['details'],
         'fulfills': {
             'output_index': output_index,
             'transaction_id': user_blockchain[len(user_blockchain)-1]['id'] 
-            #'transaction_id': fulfilled_creation_tx['id']
         },
         'owners_before': output['public_keys']
     }
     
+    print('preparing transfer transaction')
     prepared_transfer_tx = bdb.transactions.prepare(
         operation='TRANSFER',
         asset=transfer_asset,
         inputs=transfer_input,
         metadata=subscriber_asset_metadata,
-        recipients=user_name_keypair.public_key
+        recipients=user_public_key,
     )
     
+    print('fulfilling transfer transaction')
     fulfilled_transfer_tx = bdb.transactions.fulfill(
         prepared_transfer_tx,
-        private_keys=user_name_keypair.private_key,
+        private_keys=user_name_private_key,
     )
     
+    print('commiting transfer transaction')
     sent_transfer_tx = bdb.transactions.send_commit(fulfilled_transfer_tx)
+
+    print('generating user certificate')
+    certificator.make_certi(cpf, user_fullname, project=user_course_name)
     
-    #encaixar aqui função de gerar o certificado
+    print('certificate generated succesfully')
 
-'''
-print("Is Bob the owner?",
-    sent_transfer_tx['outputs'][0]['public_keys'][0] == bob.public_key)
-
-print("Was Alice the previous owner?",
-    fulfilled_transfer_tx['inputs'][0]['owners_before'][0] == user_name_keypair.public_key)
-'''
-
-##########################################################################
 
 if __name__ == '__main__':
     pass
