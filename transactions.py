@@ -71,20 +71,23 @@ def generate_cert(user_fullname, cpf, course_name, user_name_private_key):
     user_data = bdb.assets.get(search=user_fullname, limit=10)
     
     print('looping through the data gathered and saving the exactly wanted one')
-    for index_list in range(0,len(user_data)):
-        user_name = user_data[index_list]['data']['aluno']['nome']
-        user_cpf = user_data[index_list]['data']['aluno']['cpf']
-        user_course_name = user_data[index_list]['data']['aluno']['course_name']
-        user_public_key = user_data[index_list]['data']['aluno']['public_key']
-        id_creation_to_generate_certificate = user_data[index_list]['id']
+    try:
+        for index_list in range(0,len(user_data)):
+            user_name = user_data[index_list]['data']['aluno']['nome']
+            user_cpf = user_data[index_list]['data']['aluno']['cpf']
+            user_course_name = user_data[index_list]['data']['aluno']['course_name']
+            user_public_key = user_data[index_list]['data']['aluno']['public_key']
+            id_creation_to_generate_certificate = user_data[index_list]['id']
 
-        if cpf == user_cpf and course_name == user_course_name:
-            break
+            if user_name == user_fullname and user_cpf == cpf and user_course_name == course_name:
+                break
 
-    if cpf != user_cpf and course_name != user_course_name:
-        print('the credentials were not found')
-        return -1
-            
+    except KeyError:
+        pass
+
+    if user_fullname != user_name or cpf != user_cpf or course_name != user_course_name:
+        return 'the credentials were not found'
+
     print('getting the user blockchain')
     user_blockchain = bdb.transactions.get(asset_id=id_creation_to_generate_certificate)
     
@@ -124,11 +127,15 @@ def generate_cert(user_fullname, cpf, course_name, user_name_private_key):
         recipients=user_public_key,
     )
     
-    print('fulfilling transfer transaction')
-    fulfilled_transfer_tx = bdb.transactions.fulfill(
-        prepared_transfer_tx,
-        private_keys=user_name_private_key,
-    )
+    try:
+        print('fulfilling transfer transaction')
+        fulfilled_transfer_tx = bdb.transactions.fulfill(
+            prepared_transfer_tx,
+            private_keys=user_name_private_key,
+        )
+    
+    except Exception as e:
+        return e
     
     print('commiting transfer transaction')
     sent_transfer_tx = bdb.transactions.send_commit(fulfilled_transfer_tx)
@@ -136,7 +143,7 @@ def generate_cert(user_fullname, cpf, course_name, user_name_private_key):
     print('generating user certificate')
     certificator.make_certi(cpf, user_fullname, project=user_course_name)
     
-    print('certificate generated succesfully')
+    return 'certificate generated succesfully'
 
 
 if __name__ == '__main__':
