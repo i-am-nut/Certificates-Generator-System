@@ -66,6 +66,7 @@ class Database(Resource):
 
     def post(self):
         #criacao de usuario
+        #SOMENTE 2 PESSOAS (DIRETOR, DESENVOLVIMENTO) PODEM CRIAR USUARIO
         #receber nome todo, cpf e nome do curso
         #chamar funcao de criacao de usuario (do banco) passando os parametros recebidos
         #retorna o cliente sua chave privada
