@@ -57,6 +57,25 @@ class TodoList(Resource):
         TODOS[todo_id] = {'task': args['task']}
         return TODOS[todo_id], 201
 
+
+# 
+class Database(Resource):
+    def get(self):
+        #visualizacao da pagina do sistema gerador de certificado
+        #retornar aqui a pagina principal com as forms para insercao dos dados do usuario
+
+    def post(self):
+        #criacao de usuario
+        #receber nome todo, cpf e nome do curso
+        #chamar funcao de criacao de usuario (do banco) passando os parametros recebidos
+        #retorna o cliente sua chave privada
+
+    def put(self):
+        #geracao de certificado
+        #receber nome todo, cpf, nome do curso e a chave privada do usuario
+        #retorna o certificado aberto em outra pagina?
+        #fazer o cliente baixar o arquivo de certificado gerado?
+
 ##
 ## Actually setup the Api resource routing here
 ##
