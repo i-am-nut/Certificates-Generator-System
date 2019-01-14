@@ -2,7 +2,7 @@ from flask import Flask
 from flask import send_file
 from flask_restful import reqparse, abort, Api, Resource
 import transactions
-from pthlib import Path
+from pathlib import Path
 
 app = Flask(__name__)
 api = Api(app)
@@ -19,6 +19,10 @@ def abort_if_todo_doesnt_exist(todo_id):
 
 parser = reqparse.RequestParser()
 parser.add_argument('task')
+parser.add_argument('user_private_key')
+parser.add_argument('full_name')
+parser.add_argument('cpf')
+parser.add_argument('course_name')
 
 
 # Todo
@@ -35,6 +39,7 @@ class Todo(Resource):
 
     def put(self, todo_id):
         args = parser.parse_args()
+        print(args)
         task = {'task': args['task']}
         TODOS[todo_id] = task
         return task, 201
@@ -48,32 +53,36 @@ class TodoList(Resource):
 
     def post(self):
         args = parser.parse_args()
+        print(args)
         todo_id = int(max(TODOS.keys()).lstrip('todo')) + 1
         todo_id = 'todo%i' % todo_id
-        TODOS[todo_id] = {'task': args['task']}
+        TODOS[todo_id] = {'task': args['cpf']}
         return TODOS[todo_id], 201
 
 
 class Database(Resource):
     def get(self):
+        return True
         #visualizacao da pagina do sistema gerador de certificado
         #retornar aqui a pagina principal com as forms para insercao dos dados do usuario
-
-    def post(self, user_private_key, full_name, cpf, course_name):
-        if user_private_key != 'marco_aurelio_key' or user_private_key != 'graca_key':
-            return 'you are not allowed to create a user'
-        else:
-            pk = transactions.create_user(full_name, cpf, course_name)
+        
+    def post(self):
+        args = parser.parse_args()
+        if args['user_private_key'] == 'marco_aurelio_key' or args['user_private_key'] == 'graca_key':
+            pk = transactions.create_user(args['full_name'], args['cpf'], args['course_name'])
             return pk
+        else:
+            return 'you are not allowed to create a user'
         #criacao de usuario
         #SOMENTE 2 PESSOAS (DIRETOR, DESENVOLVIMENTO) PODEM CRIAR USUARIO
         #receber nome todo, cpf e nome do curso
         #chamar funcao de criacao de usuario (do banco) passando os parametros recebidos
         #retorna o cliente sua chave privada
 
-    def put(self, full_name, cpf, course_name, private_key):
-        result = transactions.generate_cert(full_name, cpf, course_name, private_key)
-        return send_file(str(Path.cwd())+'/certificates/'+cpf+'.pdf',attachment_filename = '{}.pdf'.format(cpf))
+    def put(self):
+        args = parser.parse_args()
+        result = transactions.generate_cert(args['full_name'], args['cpf'], args['course_name'], args['private_key'])
+        return send_file(str(Path.cwd())+'/certificates/'+result+'.pdf',attachment_filename = '{}.pdf'.format(cpf))
         #receber nome todo, cpf, nome do curso e a chave privada do usuario
         #retorna o certificado aberto em outra pagina?
         #fazer o cliente baixar o arquivo de certificado gerado?
