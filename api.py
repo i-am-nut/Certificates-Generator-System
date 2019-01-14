@@ -1,6 +1,8 @@
 from flask import Flask
+from flask import send_file
 from flask_restful import reqparse, abort, Api, Resource
 import transactions
+from pthlib import Path
 
 app = Flask(__name__)
 api = Api(app)
@@ -10,13 +12,6 @@ TODOS = {
     'todo2': {'task': '?????'},
     'todo3': {'task': 'profit!'},
 }
-
-#TODOS = {
-#    'unama': {'fulano': 'cpf-123456'},
-#    'ufpa': {'emerson': 'cpf-123213'},
-#    'ufra': {'indio': 'cpf-000001'},
-#}
-
 
 def abort_if_todo_doesnt_exist(todo_id):
     if todo_id not in TODOS:
@@ -78,8 +73,7 @@ class Database(Resource):
 
     def put(self, full_name, cpf, course_name, private_key):
         result = transactions.generate_cert(full_name, cpf, course_name, private_key)
-        return result
-        #geracao de certificado
+        return send_file(str(Path.cwd())+'/certificates/'+cpf+'.pdf',attachment_filename = '{}.pdf'.format(cpf))
         #receber nome todo, cpf, nome do curso e a chave privada do usuario
         #retorna o certificado aberto em outra pagina?
         #fazer o cliente baixar o arquivo de certificado gerado?

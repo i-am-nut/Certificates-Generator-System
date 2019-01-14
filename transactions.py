@@ -143,7 +143,8 @@ def generate_cert(user_fullname, cpf, course_name, user_name_private_key):
     print('generating user certificate')
     certificator.make_certi(cpf, user_fullname, project=user_course_name)
     
-    return 'certificate generated succesfully'
+    #return 'certificate generated succesfully'
+    return cpf
 
 
 if __name__ == '__main__':
