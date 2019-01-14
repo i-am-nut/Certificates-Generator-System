@@ -1,5 +1,6 @@
 from flask import Flask
 from flask_restful import reqparse, abort, Api, Resource
+import transactions
 
 app = Flask(__name__)
 api = Api(app)
@@ -58,20 +59,26 @@ class TodoList(Resource):
         return TODOS[todo_id], 201
 
 
-# 
 class Database(Resource):
     def get(self):
         #visualizacao da pagina do sistema gerador de certificado
         #retornar aqui a pagina principal com as forms para insercao dos dados do usuario
 
-    def post(self):
+    def post(self, user_private_key, full_name, cpf, course_name):
+        if user_private_key != 'marco_aurelio_key' or user_private_key != 'graca_key':
+            return 'you are not allowed to create a user'
+        else:
+            pk = transactions.create_user(full_name, cpf, course_name)
+            return pk
         #criacao de usuario
         #SOMENTE 2 PESSOAS (DIRETOR, DESENVOLVIMENTO) PODEM CRIAR USUARIO
         #receber nome todo, cpf e nome do curso
         #chamar funcao de criacao de usuario (do banco) passando os parametros recebidos
         #retorna o cliente sua chave privada
 
-    def put(self):
+    def put(self, full_name, cpf, course_name, private_key):
+        result = transactions.generate_cert(full_name, cpf, course_name, private_key)
+        return result
         #geracao de certificado
         #receber nome todo, cpf, nome do curso e a chave privada do usuario
         #retorna o certificado aberto em outra pagina?
@@ -82,6 +89,7 @@ class Database(Resource):
 ##
 api.add_resource(TodoList, '/todos')
 api.add_resource(Todo, '/todos/<todo_id>')
+api.add_resource(Database, '/apiv1')
 
 
 if __name__ == '__main__':
