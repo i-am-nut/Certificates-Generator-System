@@ -20,6 +20,7 @@ def abort_if_todo_doesnt_exist(todo_id):
 parser = reqparse.RequestParser()
 parser.add_argument('task')
 parser.add_argument('user_private_key')
+parser.add_argument('private_key')
 parser.add_argument('full_name')
 parser.add_argument('cpf')
 parser.add_argument('course_name')
@@ -82,10 +83,12 @@ class Database(Resource):
     def put(self):
         args = parser.parse_args()
         result = transactions.generate_cert(args['full_name'], args['cpf'], args['course_name'], args['private_key'])
-        return send_file(str(Path.cwd())+'/certificates/'+result+'.pdf',attachment_filename = '{}.pdf'.format(cpf))
+        return send_file(str(Path.cwd())+'/certificates/'+result+'.pdf',attachment_filename = '{}.pdf'.format(args['cpf']))
         #receber nome todo, cpf, nome do curso e a chave privada do usuario
         #retorna o certificado aberto em outra pagina?
         #fazer o cliente baixar o arquivo de certificado gerado?
+        #test user= {pvk: GwYM3fNf7Lq2RfvKhQWkRfEpENFxu5cK93L8uPDAc3WU, name=nego drama, course_name=photoshop, cpf=123123}
+        
 
 ##
 ## Actually setup the Api resource routing here
