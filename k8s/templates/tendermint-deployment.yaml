@@ -1,0 +1,39 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.17.0 ()
+  creationTimestamp: null
+  labels:
+    io.kompose.service: tendermint
+  name: tendermint
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        io.kompose.service: tendermint
+    spec:
+      containers:
+      - command: ["/bin/sh","-c"]
+        args:
+        - tendermint init && tendermint node --consensus.create_empty_blocks=false  --proxy_app=tcp://bigchaindb:26658
+        image: kryha/tendermint:0.22.8
+        name: tendermint
+        ports:
+        - containerPort: 26656
+        - containerPort: 26657
+        resources: {}
+        volumeMounts:
+        - mountPath: /tendermint
+          name: tmdata
+      restartPolicy: Always
+      volumes:
+      - name: tmdata
+        persistentVolumeClaim:
+          claimName: tmdata
+status: {}
