@@ -1,0 +1,59 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.17.0 ()
+  creationTimestamp: null
+  labels:
+    io.kompose.service: bigchaindb
+  name: bigchaindb
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        io.kompose.service: bigchaindb
+    spec:
+      containers:
+      - args:
+        - start
+        env:
+        - name: BIGCHAINDB_DATABASE_BACKEND
+          value: localmongodb
+        - name: BIGCHAINDB_DATABASE_HOST
+          value: mongodb
+        - name: BIGCHAINDB_DATABASE_PORT
+          value: "27017"
+        - name: BIGCHAINDB_SERVER_BIND
+          value: 0.0.0.0:9984
+        - name: BIGCHAINDB_TENDERMINT_HOST
+          value: tendermint
+        - name: BIGCHAINDB_TENDERMINT_PORT
+          value: "26657"
+        - name: BIGCHAINDB_WSSERVER_ADVERTISED_HOST
+          value: bigchaindb
+        - name: BIGCHAINDB_WSSERVER_HOST
+          value: 0.0.0.0
+        image: bigchaindb/bigchaindb:2.0.0-beta9
+        name: bigchaindb
+        type: NodePort
+        ports:
+        - containerPort: 9984
+          port: 9984
+        - containerPort: 9985
+          port: 9985
+        - containerPort: 26658
+        resources: {}
+        volumeMounts:
+        - mountPath: /usr/src/app/bigchaindb
+          name: bigchaindb
+      restartPolicy: Always
+      volumes:
+      - name: bigchaindb
+        persistentVolumeClaim:
+          claimName: bigchaindb
+status: {}
