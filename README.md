@@ -40,4 +40,13 @@ https://docs.bigchaindb.com/projects/contributing/en/latest/dev-setup-coding-and
 
 - Kubernetes / Helm
 
- `helm install --name bdb k8/bdb/`
+ `helm install --name bdb k8s/bdb/`
+
+# Demo
+
+- Clone this repo
+- Initialize a virtual enviroment and source it: `virtualenv app && source app/bin/activate`
+- Install dependencies: `pip install -r requirements.txt`
+- Run the api: `python api.py`
+- Send a **POST** request to api endpoint `localhost/apiv1` with parameters: `user_private_key= marco_aurelio_key' 'full_name', 'cpf'` and `'course_name'` so that a user will be created.
+- Query the database to check your transaction commited to the blockchain: `bdb.assets.get(search='full_name_choosen')`
