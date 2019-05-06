@@ -22,6 +22,7 @@ class Database(Resource):
         
     def post(self):
         args = parser.parse_args()
+        #gerar e preestabelecer aqui as chaves de ambos no ambiente de produção
         if args['user_private_key'] == 'marco_aurelio_key' or args['user_private_key'] == 'graca_key':
             pk = transactions.create_user(args['full_name'], args['cpf'], args['course_name'])
             return pk
