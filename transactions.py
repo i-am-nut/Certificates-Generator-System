@@ -8,8 +8,7 @@ import certificator
 
 
 #bdb_root_url = 'https://test.bigchaindb.com' 
-#bdb_root_url = '0.0.0.0:9984'
-bdb_root_url = 'carijo:30080'
+bdb_root_url = '0.0.0.0:9984'
 bdb = BigchainDB(bdb_root_url)
 
 
